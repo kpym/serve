@@ -5,6 +5,14 @@ import (
 )
 
 // open the browser
-func openbrowser(url string) error {
-	return exec.Command("xdg-open", url).Start()
+func openbrowser(url string) (err error) {
+	if err = exec.Command("xdg-open", url).Start(); err == nil {
+		return nil
+	}
+	// are we in WSL ?
+	if exec.Command("cmd.exe", "/C", "start", url).Start() == nil {
+		return nil
+	}
+	// return the xdg-open err
+	return err
 }
