@@ -5,6 +5,6 @@ import (
 )
 
 // open the browser
-func openbrowser(url string) {
-	check(exec.Command("open", url).Start())
+func openbrowser(url string) error {
+	return exec.Command("open", url).Start()
 }

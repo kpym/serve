@@ -5,6 +5,6 @@ import (
 )
 
 // open the browser
-func openbrowser(url string) {
-	check(exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start())
+func openbrowser(url string) error {
+	return exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
 }

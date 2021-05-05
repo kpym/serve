@@ -7,9 +7,10 @@ import (
 	"net/http"
 )
 
-func check(e error) {
+func try(e error, msg string) {
 	if e != nil {
-		log.Fatal(e)
+		log.Println(msg)
+		log.Println(e)
 	}
 }
 
@@ -25,6 +26,6 @@ func main() {
 	}
 	// start serving the local folder
 	log.Printf("Start serving the current folder to %s.", hostport)
-	openbrowser("http://" + hostport)
-	check(http.ListenAndServe(hostport, http.FileServer(http.Dir("."))))
+	try(openbrowser("http://"+hostport), "Can't open the web browser.")
+	log.Fatal(http.ListenAndServe(hostport, http.FileServer(http.Dir("."))))
 }
