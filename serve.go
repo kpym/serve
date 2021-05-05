@@ -7,6 +7,9 @@ import (
 	"net/http"
 )
 
+// the version will be set by goreleaser based on the git tag
+var version string = "dev"
+
 func try(e error, msg string) {
 	if e != nil {
 		log.Println(msg)
@@ -25,7 +28,7 @@ func main() {
 		}
 	}
 	// start serving the local folder
-	log.Printf("Start serving the current folder to %s.", hostport)
+	log.Printf("serve [%s]: start serving the current folder to %s.", version, hostport)
 	try(openbrowser("http://"+hostport), "Can't open the web browser.")
 	log.Fatal(http.ListenAndServe(hostport, http.FileServer(http.Dir("."))))
 }
