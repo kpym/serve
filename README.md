@@ -6,37 +6,26 @@ Start serving the current folder at the first available port after `8080` and op
 
 ```bash
 > serve
-2021/05/05 11:18:58 Start serving the current folder to localhost:8080.
+2021/12/22 15:24:57 serve [dev]: start serving the current folder to localhost:8080.
 ```
 
-## The go code
+Or if there is piped data it will be served.
 
-1. Find the first available port:
-    ```go
-      var hostport string
-      for i := 8080; i < 8180; i++ {
-        hostport = fmt.Sprintf("localhost:%d", i)
-        if ln, err := net.Listen("tcp", hostport); err == nil {
-          ln.Close()
-          break
-        }
-      }
-    ```
-1. Open the browser at `url :="http://" + hostport`:
-    - on Windows
-      ```go
-        exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-      ```
-    - on Linux
-      ```go
-        exec.Command("xdg-open", url).Start()
-      ```
-    - on Mac
-      ```go
-        exec.Command("open", url).Start()
-      ```
-1. Start serving the local folder:
-    ```go
-      http.ListenAndServe(hostport, http.FileServer(http.Dir(".")))
-    ```
+```bash
+> echo test | serve
+2021/12/22 15:24:20 serve [dev]: start serving the piped data to localhost:8080.
+2021/12/22 15:24:21 serve from stdin
+```
+
+## To install
+
+### Using go
+
+```bash
+> go install github.com/kpym/serve@latest
+```
+
+### Downloading precompiled binaries
+
+You can download the precompiled single executable from [the realease page](https://github.com/kpym/serve/releases).
 
