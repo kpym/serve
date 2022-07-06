@@ -18,7 +18,7 @@ builds:
       - 386
       - amd64
     ldflags:
-     - -s -w -X github.com/kpym/serve.version={{.Version}}
+     - -s -w -X main.version={{.Version}}
 archives:
   - replacements:
       darwin: MacOS
