@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
@@ -62,13 +64,27 @@ func main() {
 	// interrupt handling
 	catchCtrlC()
 
-	// find the first available port after 8080
+	// get the command line arguments
+	var port string
+	var prefix string
+
+	// parse the command line arguments
+	flag.StringVar(&port, "port", "", "port to listen on")
+	flag.StringVar(&prefix, "prefix", "", "prefix to serve (examples: 'foo' or '/foo/bar/')")
+	flag.Parse()
+
 	var hostport string
-	for i := 8080; i < 8180; i++ {
-		hostport = fmt.Sprintf("localhost:%d", i)
-		if ln, err := net.Listen("tcp", hostport); err == nil {
-			ln.Close()
-			break
+	if port != "" {
+		// if port is given, use it
+		hostport = "localhost:" + port
+	} else {
+		// else find the first available port after 8080
+		for i := 8080; i < 8180; i++ {
+			hostport = fmt.Sprintf("localhost:%d", i)
+			if ln, err := net.Listen("tcp", hostport); err == nil {
+				ln.Close()
+				break
+			}
 		}
 	}
 
@@ -86,11 +102,15 @@ func main() {
 		server = nil
 	} else {
 		// if no, serve directly the current folder
-		log.Printf("serve [%s]: start serving the current folder to %s.", version, hostport)
+		log.Printf("serve [%s]: start serving the current folder to %s.", version, hostport+prefix)
 		server = http.FileServer(http.Dir("."))
+		if prefix != "" {
+			prefix = "/" + strings.Trim(prefix, "/") + "/"
+			server = http.StripPrefix(prefix, server)
+		}
 	}
 
 	// Try to open the browser before to start serving
-	try(openbrowser("http://"+hostport), "Can't open the web browser.")
+	try(openbrowser("http://"+hostport+prefix), "Can't open the web browser.")
 	log.Fatal(http.ListenAndServe(hostport, server))
 }
