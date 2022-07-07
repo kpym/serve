@@ -6,27 +6,32 @@ Start serving the current folder at the first available port after `8080` and op
 
 ```bash
 > serve
-2021/12/22 15:24:57 serve [dev]: start serving the current folder to localhost:8080.
+2022/07/07 14:31:44 [serve] Start serving the current folder at http://localhost:8080.
+2022/07/07 14:31:44 [serve] Request: /
 ```
 
 Or if there is piped data it will be served.
 
 ```bash
 > echo test | serve
-2021/12/22 15:24:20 serve [dev]: start serving the piped data to localhost:8080.
-2021/12/22 15:24:21 serve from stdin
+2022/07/07 14:33:46 [serve] Piped data is present.
+2022/07/07 14:33:46 [serve] Start serving the current folder at http://localhost:8080.
+2022/07/07 14:33:55 [serve] Request: /
+2022/07/07 14:33:55 [serve] Serve piped data at root.
 ```
 Only two flags are available: 
 
-- `--port` : choose the port to use. If not set the first available after `8080` will be used.
+- `-p` : choose the port to use. If not set the first available after `8080` will be used.
   ```bash
-  > serve --port 8888
-  2021/12/22 15:24:57 serve [dev]: start serving the current folder to localhost:8888.
+  > serve -p 8888
+  2022/07/07 14:34:56 [serve] Start serving the current folder at http://localhost:8888.
+  2022/07/07 14:34:56 [serve] Request: /
   ```
-- `-prefix` : serve to the specified prefix folder of localhost. 
+- `-t` : serve at the given path 
   ```bash
-  > serve --prefix 'foo'
-  2021/12/22 15:24:57 serve [dev]: start serving the current folder to localhost:8080/foo/.
+  > serve -t 'foo'
+  2022/07/07 14:36:54 [serve] Start serving at http://localhost:8080/foo/.
+  2022/07/07 14:36:54 [serve] Request: /foo/
   ```
 
 ## To install
