@@ -16,6 +16,12 @@ import (
 // the version will be set by goreleaser based on the git tag
 var version string = "dev"
 
+// get the command line arguments
+var (
+	port string
+	path string
+)
+
 // try logs the error and a message if needed
 func try(e error, msg string) {
 	if e != nil {
@@ -45,17 +51,50 @@ func catchCtrlC() {
 	}()
 }
 
-// SetPipeHanler sets the handler function in case of piped data
-func SetPipeHanler(stdin []byte) {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			log.Printf("serve from stdin")
-			w.Write(stdin)
+// serveAtRoot returns a handler that serves the given data at the root path.
+// all other paths are served by h
+func serveAtRoot(data []byte, h http.Handler) http.Handler {
+	// if data is empty, return the handler as is
+	if len(data) == 0 {
+		return h
+	}
+	// if data is not empty, serve it at root
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" || r.URL.Path == "" {
+			log.Printf("Serve piped data at root.")
+			w.Write(data)
 		} else {
-			log.Printf("serve static file: " + r.URL.Path)
-			http.FileServer(http.Dir(".")).ServeHTTP(w, r)
+			h.ServeHTTP(w, r)
 		}
 	})
+}
+
+// logHandler logs the request path
+func logHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Request: %s", r.URL.Path)
+		h.ServeHTTP(w, r)
+	})
+}
+
+func init() {
+	// set help message
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, `serve (version: %s): Serve a directory or stdin as a webserver.
+Usage: serve [options]
+
+Options:
+
+`, version)
+		flag.PrintDefaults()
+	}
+	// set command line arguments
+	flag.StringVar(&port, "p", "", "port to listen on")
+	flag.StringVar(&path, "t", "", "serve at the given path (examples: 'foo' or '/foo/bar/')")
+
+	// init the log
+	log.SetFlags(log.LstdFlags | log.Lmsgprefix)
+	log.SetPrefix("[serve] ")
 }
 
 func main() {
@@ -64,15 +103,10 @@ func main() {
 	// interrupt handling
 	catchCtrlC()
 
-	// get the command line arguments
-	var port string
-	var prefix string
-
 	// parse the command line arguments
-	flag.StringVar(&port, "port", "", "port to listen on")
-	flag.StringVar(&prefix, "prefix", "", "prefix to serve (examples: 'foo' or '/foo/bar/')")
 	flag.Parse()
 
+	// set host port to 'localhost:port'
 	var hostport string
 	if port != "" {
 		// if port is given, use it
@@ -88,29 +122,30 @@ func main() {
 		}
 	}
 
-	var server http.Handler
+	// set the handler
+	server := http.FileServer(http.Dir("."))
 	// check if there is a piped data to serve
 	fi, err := os.Stdin.Stat()
 	if err == nil && (fi.Mode()&os.ModeNamedPipe != 0) {
-		// if yes, serve the piped data to at "/"
+		// if yes, serve the piped data at root
 		stdin, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			log.Fatal("Error reading from stdin:", err)
 		}
-		log.Printf("serve [%s]: start serving the piped data to %s.", version, hostport)
-		SetPipeHanler(stdin)
-		server = nil
-	} else {
-		// if no, serve directly the current folder
-		log.Printf("serve [%s]: start serving the current folder to %s.", version, hostport+prefix)
-		server = http.FileServer(http.Dir("."))
-		if prefix != "" {
-			prefix = "/" + strings.Trim(prefix, "/") + "/"
-			server = http.StripPrefix(prefix, server)
-		}
+		log.Printf("Piped data is present.")
+		server = serveAtRoot(stdin, server)
 	}
+	// check if there is a path to serve to
+	if path != "" {
+		// normalize path
+		path = "/" + strings.Trim(path, "/") + "/"
+		server = http.StripPrefix(path, server)
+	}
+	// log the request path
+	server = logHandler(server)
 
 	// Try to open the browser before to start serving
-	try(openbrowser("http://"+hostport+prefix), "Can't open the web browser.")
+	try(openbrowser("http://"+hostport+path), "Can't open the web browser.")
+	log.Printf("Start serving at http://%s%s.", hostport, path)
 	log.Fatal(http.ListenAndServe(hostport, server))
 }
