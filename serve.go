@@ -146,6 +146,6 @@ func main() {
 
 	// Try to open the browser before to start serving
 	try(openbrowser("http://"+hostport+path), "Can't open the web browser.")
-	log.Printf("Start serving at http://%s%s.", hostport, path)
+	log.Printf("Start serving the current folder at http://%s%s.", hostport, path)
 	log.Fatal(http.ListenAndServe(hostport, server))
 }
