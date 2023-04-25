@@ -19,7 +19,7 @@ Or if there is piped data it will be served.
 2022/07/07 14:33:55 [serve] Request: /
 2022/07/07 14:33:55 [serve] Serve piped data at root.
 ```
-Only two flags are available: 
+Only two flags are available:
 
 - `-p` : choose the port to use. If not set the first available after `8080` will be used.
   ```bash
@@ -27,7 +27,7 @@ Only two flags are available:
   2022/07/07 14:34:56 [serve] Start serving the current folder at http://localhost:8888.
   2022/07/07 14:34:56 [serve] Request: /
   ```
-- `-t` : serve at the given path 
+- `-t` : serve at the given path
   ```bash
   > serve -t 'foo'
   2022/07/07 14:36:54 [serve] Start serving at http://localhost:8080/foo/.
@@ -52,7 +52,7 @@ After cloning this repo you can compile the sources with [goreleaser](https://gi
 
 ```
 git clone https://github.com/kpym/lol.git .
-goreleaser --snapshot --skip-publish --rm-dist
+goreleaser --snapshot --skip-publish --clean
 ```
 
 You will find the resulting binaries in the `dist/` sub-folder.
