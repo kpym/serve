@@ -1,3 +1,4 @@
+version: 2
 project_name: serve
 before:
   hooks:
@@ -10,18 +11,17 @@ builds:
       - windows
       - darwin
     ldflags:
-     - -s -w -X main.version={{.Version}}
+     - "-s -w -X 'main.version={{.Version}}'"
 archives:
-  -
-    name_template: >-
+  - name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
       {{- if eq .Os "darwin" }}MacOS
       {{- else if eq .Os "linux" }}Linux
       {{- else if eq .Os "windows" }}Windows
       {{- else }}{{ .Os }}
       {{- end }}_
-      {{- if eq .Arch "amd64" }}64bit
-      {{- else if eq .Arch "386" }}32bit
+      {{- if eq .Arch "amd64" }}intel64
+      {{- else if eq .Arch "386" }}intel32
       {{- else }}{{ .Arch }}
       {{- end }}
     format_overrides:
@@ -30,7 +30,7 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Tag }}"
+  version_template: "{{ .Tag }}"
 changelog:
   sort: asc
   filters:
