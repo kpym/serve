@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"flag"
 	"fmt"
 	"io"
@@ -11,10 +12,14 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 )
 
 // the version will be set by goreleaser based on the git tag
 var version string = "dev"
+
+//go:embed serve.ico
+var favIcon []byte
 
 // get the command line arguments
 var (
@@ -69,10 +74,25 @@ func serveAtRoot(data []byte, h http.Handler) http.Handler {
 	})
 }
 
-// logHandler logs the request path
+// logHandler wraps the given handler with a logging middleware that logs the request path.
 func logHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Request: %s", r.URL.Path)
+		h.ServeHTTP(w, r)
+	})
+}
+
+// favHandler wraps the given handler with a middleware that serves the favicon.
+func favHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/favicon.ico" {
+			// Serve the favicon
+			w.Header().Set("Cache-Control", "max-age=86400") // 86400 s = 1 day
+			w.Header().Set("Expires", time.Now().Add(24*time.Hour).UTC().Format(http.TimeFormat))
+			w.Write(favIcon)
+			return
+		}
+		// Delegate other requests to the original handler
 		h.ServeHTTP(w, r)
 	})
 }
@@ -142,7 +162,7 @@ func main() {
 		server = http.StripPrefix(path, server)
 	}
 	// log the request path
-	server = logHandler(server)
+	server = logHandler(favHandler(server))
 
 	// Try to open the browser before to start serving
 	try(openbrowser("http://"+hostport+path), "Can't open the web browser.")
